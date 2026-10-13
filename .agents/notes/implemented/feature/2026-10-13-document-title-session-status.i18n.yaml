@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for 2026-10-13-document-title-session-status.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-13-document-title-session-status.md
+/agent-note-session-status-prefix-in-the-browser-document-title:
+  en: 9523fb79f56f1979
+  zh: 6cf6b6879166041d
+/agent-note-session-status-prefix-in-the-browser-document-title/problem:
+  en: 77dd23dc9a53e36f
+  zh: e2f6a551e72827a7
+/agent-note-session-status-prefix-in-the-browser-document-title/decision:
+  en: 155be23cf858267f
+  zh: 629aee10525aead4
+/agent-note-session-status-prefix-in-the-browser-document-title/alternatives-considered:
+  en: 5f6c6e0915d73473
+  zh: 75f5b4f0a145421d
+/agent-note-session-status-prefix-in-the-browser-document-title/consequences:
+  en: 94866605ab48e911
+  zh: 0eba644a538f0453
+/agent-note-session-status-prefix-in-the-browser-document-title/testing:
+  en: 46e6dd807a41220b
+  zh: 746dacd3a435594e

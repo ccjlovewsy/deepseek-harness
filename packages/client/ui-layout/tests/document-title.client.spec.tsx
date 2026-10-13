@@ -6,7 +6,13 @@ import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-test-runtime'
 import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { DocumentTitle } from '../src/client/DocumentTitle.tsx'
+import type { DocumentTitleProps } from '../src/client/DocumentTitle.tsx'
 import type { MainPanelId, PanelInfo } from '../src/client/service.ts'
+
+type StatusSnapshot = Parameters<Parameters<DocumentTitleProps['useSessionStatus']>[0]>[0]
+// Pending interactions carry branded/private fields from their domain packages;
+// the title only reads presence, so tests mint a minimal stand-in.
+type PendingInteraction = NonNullable<NonNullable<StatusSnapshot extends ReadonlyMap<unknown, infer V> ? V : never>['pendingInteraction']>
 
 let originalTitle: string
 beforeEach(() => { originalTitle = document.title })
@@ -22,10 +28,15 @@ function titleSources() {
     phase: 'ready',
     projectionsBySession: {},
   })
+  const status = createSnapshotStore<StatusSnapshot>(new Map())
   const panelInfo = createSnapshotStore<PanelInfo>({ activePanelId: null })
   return {
-    sessionId, sessions, panelInfo,
-    props: { useSessions: bindSnapshotSelector(sessions), usePanelInfo: bindSnapshotSelector(panelInfo) },
+    sessionId, sessions, status, panelInfo,
+    props: {
+      useSessions: bindSnapshotSelector(sessions),
+      useSessionStatus: bindSnapshotSelector(status),
+      usePanelInfo: bindSnapshotSelector(panelInfo),
+    },
   }
 }
 
@@ -81,5 +92,32 @@ describe('DocumentTitle', () => {
     sessions.update((state) => { state.byId = {}; state.ids = [] })
     render(<DocumentTitle {...props} productTitle="Product" />)
     expect(document.title).toBe('Product')
+  })
+
+  it('prefixes the title while any Session runs and clears it on idle', () => {
+    const { sessionId, sessions, status, props } = titleSources()
+    sessions.update((state) => { state.byId[sessionId]!.title = 'Session title' })
+    render(<DocumentTitle {...props} productTitle="Product" />)
+    expect(document.title).toBe('Session title — Product')
+    act(() => { status.set(new Map([[sessionId, { running: true, pendingInteraction: undefined, completionUnread: false }]])) })
+    expect(document.title).toBe('● Session title — Product')
+    act(() => { status.set(new Map([[sessionId, { running: false, pendingInteraction: undefined, completionUnread: false }]])) })
+    expect(document.title).toBe('Session title — Product')
+  })
+
+  it('prefers the pending-interaction prefix over running and prefixes panel views too', () => {
+    const { sessionId, sessions, status, panelInfo, props } = titleSources()
+    sessions.update((state) => { state.byId[sessionId]!.title = 'Session title' })
+    render(<DocumentTitle {...props} productTitle="Product" />)
+    act(() => {
+      status.set(new Map([[sessionId, {
+        running: true,
+        pendingInteraction: { key: 'k1', kind: 'approval', sessionId } as unknown as PendingInteraction,
+        completionUnread: false,
+      }]]))
+    })
+    expect(document.title).toBe('❗ Session title — Product')
+    act(() => { panelInfo.set({ activePanelId: 'panel-a' as MainPanelId }) })
+    expect(document.title).toBe('❗ Product')
   })
 })

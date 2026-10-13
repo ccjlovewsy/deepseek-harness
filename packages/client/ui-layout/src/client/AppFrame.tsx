@@ -121,6 +121,7 @@ function DragHandle(props: { side: 'sidebar' | 'rightbar'; left: number; onStart
 export function AppFrame({
   useStore,
   useSessions,
+  useSessionStatus,
   usePanelInfo,
   actions,
   renderSlot,
@@ -275,6 +276,7 @@ export function AppFrame({
       <DocumentTitle
         productTitle={productTitle}
         useSessions={useSessions}
+        useSessionStatus={useSessionStatus}
         usePanelInfo={usePanelInfo}
       />
       <div className={css.sidebarCol}>
